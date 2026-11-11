@@ -1,6 +1,12 @@
 /* =========================================================
    HELPERS
 ========================================================= */
+/* Escape text before inserting it as HTML. Use for anything a user typed
+   or that came from the database. */
+function esc(v){
+  return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
 function ageText(mins){
   if(mins<60) return mins+' min ago';
   const h=Math.floor(mins/60), m=mins%60;
@@ -8,7 +14,7 @@ function ageText(mins){
 }
 function avatar(analyst, size){
   size = size||32;
-  return `<div class="avatar" style="width:${size}px;height:${size}px;flex:0 0 ${size}px;font-size:${size*0.36}px;">${analyst.initials}</div>`;
+  return `<div class="avatar" style="width:${size}px;height:${size}px;flex:0 0 ${size}px;font-size:${size*0.36}px;">${esc(analyst.initials)}</div>`;
 }
 function riskColor(score){
   if(score>=80) return 'var(--critical)';

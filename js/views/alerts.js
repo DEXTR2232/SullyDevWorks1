@@ -38,7 +38,7 @@ function alertsTableBlock(list, title, showFilters){
       ${Object.values(ANALYSTS).map(a=>`<option value="${a.id}" ${f.owner===a.id?'selected':''}>${a.name==='Unassigned'?'Unassigned':a.name}</option>`).join('')}
     </select>
     <select class="dr"><option>Date Range: Last 24h</option><option>Last 7 days</option><option>Last 30 days</option></select>
-    <div class="tbl-search">${ICON.search}<input type="text" id="tbl-search-input" placeholder="Search Alert ID, Host, IP, User..." value="${f.search}"></div>
+    <div class="tbl-search">${ICON.search}<input type="text" id="tbl-search-input" placeholder="Search Alert ID, Host, IP, User..." value="${esc(f.search)}"></div>
   </div>
   <div class="tbl-wrap">
     <table>
@@ -67,7 +67,7 @@ function alertRow(a){
     <td>
       ${a.owner==='unassigned'
         ? `<span class="owner-cell unassigned">Unassigned</span>`
-        : `<span class="owner-cell"><span class="mini-av">${owner.initials}</span>${owner.name.split(' ')[0]}</span>`}
+        : `<span class="owner-cell"><span class="mini-av">${esc(owner.initials)}</span>${esc(owner.name.split(' ')[0])}</span>`}
     </td>
     <td><span class="status-pill ${a.status}">${a.status}</span></td>
     <td><span class="age-cell">${ageText(a.created)}</span></td>

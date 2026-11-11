@@ -6,11 +6,11 @@ function viewTeam(){
   return `
   <div class="section-head"><h2>Team Activity</h2><span class="hint">SOC analyst workload and performance</span></div>
   <div class="grid team-cards">
-    ${Object.values(ANALYSTS).filter(a=>a.id!=='unassigned').map(a=>{
+    ${Object.values(ANALYSTS).filter(a=>TEAM_STATS[a.id]).map(a=>{
       const s = TEAM_STATS[a.id];
       return `
       <div class="team-card">
-        <div class="tc-head">${avatar(a,36)}<div><div class="u-name">${a.name}</div><div class="u-role">${a.role}</div></div></div>
+        <div class="tc-head">${avatar(a,36)}<div><div class="u-name">${esc(a.name)}</div><div class="u-role">${esc(a.role)}</div></div></div>
         <div class="tc-stats">
           <div class="tc-stat"><div class="ts-label">Assigned</div><div class="ts-val">${s.assigned}</div></div>
           <div class="tc-stat"><div class="ts-label">Investigating</div><div class="ts-val">${s.investigating}</div></div>

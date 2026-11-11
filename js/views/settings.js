@@ -35,7 +35,7 @@ function viewSettings(){
       <div style="font-size:12.5px;font-weight:600;margin-bottom:12px;">Team Members</div>
       <div class="stub-list">
         ${Object.values(ANALYSTS).filter(a=>a.id!=='unassigned').map(a=>`
-          <div class="row">${avatar(a,30)}<div style="flex:1;"><div style="font-size:12.5px;font-weight:500;">${a.name}</div><div style="font-size:10.5px;color:var(--text-muted);">${a.role}</div></div><span class="status-pill Closed">Active</span></div>`).join('')}
+          <div class="row">${avatar(a,30)}<div style="flex:1;"><div style="font-size:12.5px;font-weight:500;">${esc(a.name)}</div><div style="font-size:10.5px;color:var(--text-muted);">${esc(a.role)}</div></div><span class="status-pill Closed">Active</span></div>`).join('')}
       </div>
     </div>
     <div class="card">

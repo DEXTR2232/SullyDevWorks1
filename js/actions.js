@@ -96,6 +96,7 @@ function detailAction(act){
     if(a.status==='New') a.status='Investigating';
     a.timeline.push({time:now, text:CURRENT_USER.name.split(' ')[0]+' took ownership', actor:CURRENT_USER.name});
   } else if(act==='reassign'){
+    if(!hasRole('team_lead','admin')) return;
     const others = Object.values(ANALYSTS).filter(x=>x.id!==a.owner && x.id!=='unassigned');
     a.owner = others[0].id;
     a.timeline.push({time:now, text:'Reassigned to '+others[0].name, actor:CURRENT_USER.name});

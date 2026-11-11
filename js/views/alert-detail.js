@@ -20,12 +20,12 @@ function viewAlertDetail(){
           <div class="m-item"><div class="m-label">Source</div><div class="m-val"><span class="src-chip ${SRC_CLASS[a.source]}"><span class="d"></span>${fmtSrcShort(a.source)}</span></div></div>
           <div class="m-item"><div class="m-label">Source Alert ID</div><div class="m-val" style="font-family:var(--font-mono);">${a.sourceAlertId}</div></div>
           <div class="m-item"><div class="m-label">Status</div><div class="m-val"><span class="status-pill ${a.status}">${a.status}</span></div></div>
-          <div class="m-item"><div class="m-label">Assigned To</div><div class="m-val">${a.owner==='unassigned'?'Unassigned':owner.name}</div></div>
+          <div class="m-item"><div class="m-label">Assigned To</div><div class="m-val">${a.owner==='unassigned'?'Unassigned':esc(owner.name)}</div></div>
         </div>
       </div>
       <div class="dh-actions">
         <button class="btn primary" data-act="claim">${ICON.claim}Take Ownership</button>
-        <button class="btn" data-act="reassign">${ICON.assign}Reassign</button>
+        ${hasRole('team_lead','admin')?`<button class="btn" data-act="reassign">${ICON.assign}Reassign</button>`:''}
         <button class="btn danger" data-act="escalate">${ICON.escalate}Escalate</button>
         <button class="btn" data-act="gotonote">${ICON.note}Add Note</button>
         <button class="btn success" data-act="closealert">${ICON.close}Close Alert</button>
@@ -101,8 +101,8 @@ function tabInvestigation(a){
       <div class="section-head" style="margin-bottom:12px;"><h2 style="font-size:13px;">Analyst Notes</h2></div>
       ${a.notes.length ? a.notes.map(n=>`
         <div class="note-card">
-          <div class="note-head">${avatar(analystByName(n.author),24)}<span class="n-name">${n.author}</span><span class="n-time">${n.time}</span></div>
-          <div class="note-body">${n.text}</div>
+          <div class="note-head">${avatar(analystByName(n.author),24)}<span class="n-name">${esc(n.author)}</span><span class="n-time">${esc(n.time)}</span></div>
+          <div class="note-body">${esc(n.text)}</div>
         </div>`).join('') : `<div class="empty-tab">${ICON.note}<div>No investigation notes yet.</div></div>`}
       <div class="note-add" style="margin-top:14px;">
         <textarea id="note-input" placeholder="Add an investigation note. Use @name to mention a teammate..."></textarea>
@@ -134,9 +134,9 @@ function tabTimeline(a){
     <div class="timeline">
       ${a.timeline.map(t=>`
         <div class="t-item">
-          <div class="t-time">${t.time} — ${t.actor}</div>
-          <div class="t-text">${t.text}</div>
-          ${t.quote?`<div class="t-quote">"${t.quote}"</div>`:''}
+          <div class="t-time">${esc(t.time)} — ${esc(t.actor)}</div>
+          <div class="t-text">${esc(t.text)}</div>
+          ${t.quote?`<div class="t-quote">"${esc(t.quote)}"</div>`:''}
         </div>`).join('')}
     </div>
   </div>`;

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
 <link rel="stylesheet" href="css/variables.css">
 <link rel="stylesheet" href="css/base.css">
@@ -22,7 +23,8 @@
   Plain scripts (no modules, no build step) so the app runs by opening
   index.html directly. ORDER MATTERS: each file uses globals from the ones above it.
 -->
-<!-- 1. Icons and mock data -->
+<!-- 1. Config, icons and mock data -->
+<script src="js/config.js"></script>
 <script src="js/icons.js"></script>
 <script src="js/data/analysts.js"></script>
 <script src="js/data/integrations.js"></script>
@@ -39,6 +41,7 @@
 <script src="js/state.js"></script>
 <script src="js/helpers.js"></script>
 <script src="js/shell.js"></script>
+<script src="js/auth.js"></script>
 
 <!-- 3. Views -->
 <script src="js/views/dashboard.js"></script>
@@ -51,6 +54,7 @@
 <script src="js/views/team.js"></script>
 <script src="js/views/reports.js"></script>
 <script src="js/views/audit.js"></script>
+<script src="js/views/users.js"></script>
 <script src="js/views/settings.js"></script>
 
 <!-- 4. Event handlers and boot -->

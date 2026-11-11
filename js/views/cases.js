@@ -18,7 +18,7 @@ function viewCases(){
           ${c.alerts.map(id=>`<span class="mitre-tag" style="cursor:pointer;" data-open-alert="${id}">${id}</span>`).join('')}
         </div>
         <div style="display:flex;align-items:center;gap:8px;margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
-          ${avatar(c.owner,22)}<span style="font-size:11.5px;color:var(--text-secondary);">${c.owner.name}</span>
+          ${avatar(c.owner,22)}<span style="font-size:11.5px;color:var(--text-secondary);">${esc(c.owner.name)}</span>
         </div>
       </div>`).join('')}
   </div>`;

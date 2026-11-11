@@ -16,10 +16,10 @@ function renderShell(){
       <div class="sidebar-foot">
         ${avatar(CURRENT_USER)}
         <div class="user-meta">
-          <div class="u-name">${CURRENT_USER.name}</div>
-          <div class="u-role">${CURRENT_USER.role}</div>
+          <div class="u-name">${esc(CURRENT_USER.name)}</div>
+          <div class="u-role">${esc(CURRENT_USER.role)}</div>
         </div>
-        <button class="logout-btn" title="Log out">${ICON.logout}</button>
+        <button class="logout-btn" id="logout-btn" title="Log out">${ICON.logout}</button>
       </div>
     </aside>
     <div class="main">
@@ -35,8 +35,8 @@ function renderShell(){
           <div class="topbar-user">
             ${avatar(CURRENT_USER, 28)}
             <div>
-              <div class="u-name">${CURRENT_USER.name}</div>
-              <div class="u-role">${CURRENT_USER.role}</div>
+              <div class="u-name">${esc(CURRENT_USER.name)}</div>
+              <div class="u-role">${esc(CURRENT_USER.role)}</div>
             </div>
           </div>
         </div>
@@ -48,12 +48,15 @@ function renderShell(){
     STATE.filters.search = e.target.value;
     if(STATE.view!=='alerts' && STATE.view!=='myalerts'){ setView('alerts'); } else { renderView(); }
   });
+  document.getElementById('logout-btn').addEventListener('click', signOut);
   attachNavHandlers();
 }
 
+function navAllowed(it){ return !it.roles || hasRole(...it.roles); }
+
 function renderNav(){
-  return NAV_GROUPS.map(g=>{
-    let html = g.label ? `<div class="nav-label">${g.label}</div>` : (g!==NAV_GROUPS[0] ? '<div class="nav-divider"></div>' : '');
+  return NAV_GROUPS.map(g=>({...g, items:g.items.filter(navAllowed)})).filter(g=>g.items.length).map((g,gi)=>{
+    let html = g.label ? `<div class="nav-label">${g.label}</div>` : (gi>0 ? '<div class="nav-divider"></div>' : '');
     html += g.items.map(it=>{
       const active = STATE.view===it.id ? 'active':'';
       const count = it.count ? `<span class="nav-count">${it.count()}</span>` : '';
@@ -70,6 +73,8 @@ function attachNavHandlers(){
 }
 
 function setView(view, alertId){
+  const item = NAV_GROUPS.flatMap(g=>g.items).find(i=>i.id===view);
+  if(item && !navAllowed(item)) view = 'dashboard';
   STATE.view = view;
   if(alertId){ STATE.selectedAlertId = alertId; STATE.tab='overview'; }
   document.querySelectorAll('.nav-item').forEach(el=>{
@@ -96,11 +101,13 @@ function renderView(){
     case 'team': root.innerHTML = viewTeam(); break;
     case 'reports': root.innerHTML = viewReports(); break;
     case 'audit': root.innerHTML = viewAudit(); break;
+    case 'users': root.innerHTML = viewUsers(); break;
     case 'settings': root.innerHTML = viewSettings(); break;
     default: root.innerHTML = viewDashboard();
   }
   attachViewHandlers();
   if(STATE.view==='team') initTeamCharts();
+  if(STATE.view==='users') initUsersView();
 }
 
 function renderShellNavOnly(){
