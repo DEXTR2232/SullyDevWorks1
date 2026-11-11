@@ -78,8 +78,10 @@ Deno.serve(async (req) => {
   if (claims(token).aal !== "aal2") return json({ error: "MFA verification required" }, 403);
 
   const { data: me } = await admin
-    .from("profiles").select("id, email, role, is_active").eq("id", userData.user.id).single();
+    .from("profiles").select("id, email, role, is_active, is_demo").eq("id", userData.user.id).single();
   if (!me || !me.is_active || me.role !== "admin") return json({ error: "Admins only" }, 403);
+  // The public demo account can switch itself to "admin" — it must never reach real user management.
+  if (me.is_demo) return json({ error: "Demo account cannot manage real users" }, 403);
 
   const audit = (action: string, targetId: string, newValue: Record<string, unknown> = {}) =>
     admin.from("audit_log").insert({

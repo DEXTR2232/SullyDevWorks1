@@ -30,6 +30,8 @@ function renderShell(){
           <input type="text" id="global-search" placeholder="Search Alert ID, Host, IP, User...">
         </div>
         <div class="topbar-right">
+          ${CURRENT_USER.isDemo ? `<label class="demo-switch" title="Demo only: switch role to see what each one can do">View as
+            <select id="demo-role">${Object.entries(ROLE_LABELS).map(([v,l])=>`<option value="${v}" ${CURRENT_USER.appRole===v?'selected':''}>${l}</option>`).join('')}</select></label>` : ''}
           <div class="soc-status"><span class="pulse-dot"></span>SOC STATUS: OPERATIONAL</div>
           <button class="icon-btn" title="Notifications">${ICON.bell}<span class="badge-dot"></span></button>
           <div class="topbar-user">
@@ -43,7 +45,10 @@ function renderShell(){
       </header>
       <div class="view-root" id="view-root"></div>
     </div>
+    ${CURRENT_USER.isDemo ? `<div class="demo-watermark" aria-hidden="true"><div class="dw-title">DEMO MODE</div><div class="dw-sub">Sandbox · fake data · ends in <span id="demo-countdown">--:--</span></div></div>` : ''}
   `;
+  const demoRole = document.getElementById('demo-role');
+  if(demoRole) demoRole.addEventListener('change', ()=>switchDemoRole(demoRole.value));
   document.getElementById('global-search').addEventListener('input', e=>{
     STATE.filters.search = e.target.value;
     if(STATE.view!=='alerts' && STATE.view!=='myalerts'){ setView('alerts'); } else { renderView(); }

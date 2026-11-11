@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>Unified SOAR — Public demo login</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/variables.css">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/components.css">
+<style>
+  html,body{height:auto;}
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;}
+  .demo-card{width:100%;max-width:460px;background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:26px;}
+  .tag{display:inline-block;font-size:10.5px;font-weight:800;letter-spacing:.12em;color:#ff3b41;border:2px solid rgba(229,72,77,.8);border-radius:6px;padding:3px 8px;margin-bottom:14px;}
+  h1{font-size:19px;font-weight:600;margin-bottom:6px;}
+  .lead{font-size:12.5px;color:var(--text-secondary);line-height:1.55;margin-bottom:18px;}
+  .step{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-muted);margin:16px 0 7px;}
+  .field{display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border-strong);border-radius:6px;padding:8px 8px 8px 12px;margin-bottom:8px;}
+  .field .k{font-size:11px;color:var(--text-muted);width:64px;flex:0 0 64px;}
+  .field code{flex:1;font-family:var(--font-mono);font-size:13.5px;color:var(--text-primary);}
+  .code-box{display:flex;flex-direction:column;align-items:center;background:var(--bg-1);border:1px solid var(--border-strong);border-radius:10px;padding:18px 12px 14px;}
+  #otp{font-family:var(--font-mono);font-size:44px;font-weight:600;letter-spacing:.18em;color:var(--text-primary);line-height:1;}
+  #otp.stale{color:var(--text-muted);}
+  .bar{width:100%;max-width:260px;height:5px;background:var(--bg-3);border-radius:4px;margin:14px 0 7px;overflow:hidden;}
+  .bar div{height:100%;background:var(--success);transition:width 1s linear;}
+  .bar div.low{background:var(--critical);}
+  #otp-meta{font-size:11.5px;color:var(--text-muted);}
+  #otp-err{display:none;font-size:12px;color:var(--critical);background:var(--critical-bg);border:1px solid rgba(229,72,77,.3);border-radius:6px;padding:8px 11px;margin-top:10px;}
+  .go{justify-content:center;width:100%;margin-top:18px;padding:10px;font-size:13px;}
+  ul{margin:16px 0 0 18px;font-size:11.5px;color:var(--text-muted);line-height:1.7;}
+</style>
+</head>
+<body>
+<main class="demo-card">
+  <div class="tag">PUBLIC DEMO</div>
+  <h1>Unified SOAR — demo login</h1>
+  <p class="lead">A shared demo account for this proof of concept. It shows the real sign-in, real MFA, and role-based access. As "Admin" it manages a sandbox of <b>fake users</b> only.</p>
+
+  <div class="step">1 · Sign in with</div>
+  <div class="field"><span class="k">Email</span><code id="d-email">…</code><button class="btn ghost" data-copy="d-email">Copy</button></div>
+  <div class="field"><span class="k">Password</span><code id="d-pass">…</code><button class="btn ghost" data-copy="d-pass">Copy</button></div>
+
+  <div class="step">2 · When asked for the MFA code, enter</div>
+  <div class="code-box">
+    <div id="otp" class="stale">------</div>
+    <div class="bar"><div id="otp-bar" style="width:0%"></div></div>
+    <div id="otp-meta">Loading…</div>
+    <button class="btn ghost" data-copy="otp" style="margin-top:8px;">Copy code</button>
+  </div>
+  <div id="otp-err" role="alert"></div>
+
+  <a class="btn primary go" id="go" href="index.html?demo=1" target="_blank" rel="noopener">Open the console →</a>
+
+  <ul>
+    <li>The code changes every 30 seconds, exactly like an authenticator app.</li>
+    <li>Use <b>View as</b> at the top of the console to switch between Analyst, Team Leader and Admin.</li>
+    <li>Demo sessions end after 30 minutes. Each new demo sign-in resets the sandbox.</li>
+    <li>The account is shared, so other visitors may be using it at the same time.</li>
+  </ul>
+</main>
+
+<script src="js/config.js"></script>
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  let expiresAt = 0, period = 30, refreshTimer = null;
+
+  async function load(){
+    try{
+      const r = await fetch(DEMO_OTP_URL, {headers:{apikey:SUPABASE_PUBLISHABLE_KEY}, cache:'no-store'});
+      const d = await r.json();
+      if(!r.ok || d.error) throw new Error(d.error || ('HTTP '+r.status));
+      $('d-email').textContent = d.email;
+      $('d-pass').textContent = d.password;
+      $('otp').textContent = d.code;
+      $('otp').classList.remove('stale');
+      $('otp-err').style.display = 'none';
+      period = d.period || 30;
+      expiresAt = Date.now() + d.expires_in*1000;
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(load, d.expires_in*1000 + 600);
+    }catch(e){
+      $('otp').textContent = '------';
+      $('otp').classList.add('stale');
+      $('otp-err').textContent = 'Could not load the demo code: ' + e.message + '. Retrying…';
+      $('otp-err').style.display = 'block';
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(load, 5000);
+    }
+  }
+
+  setInterval(()=>{
+    if(!expiresAt) return;
+    const left = Math.max(0, Math.round((expiresAt - Date.now())/1000));
+    $('otp-meta').textContent = left ? `New code in ${left}s` : 'Refreshing…';
+    $('otp-bar').style.width = (left/period*100)+'%';
+    $('otp-bar').classList.toggle('low', left<=5);
+  }, 250);
+
+  document.querySelectorAll('[data-copy]').forEach(b=>b.addEventListener('click', ()=>{
+    const text = $(b.dataset.copy).textContent;
+    if(navigator.clipboard) navigator.clipboard.writeText(text);
+    const old = b.textContent; b.textContent = 'Copied'; setTimeout(()=>b.textContent = old, 1200);
+  }));
+
+  if(!DEMO_MODE){
+    document.querySelector('.demo-card').innerHTML = '<div class="tag">DEMO OFF</div><h1>Demo mode is not enabled here</h1><p class="lead">This deployment is a real installation. The public demo only runs on the demo site.</p><a class="btn primary go" href="index.html">Go to sign-in →</a>';
+    return;
+  }
+  if(location.search.includes('demo-mode')) $('go').href = 'index.html?demo=1&demo-mode';
+  load();
+})();
+</script>
+</body>
+</html>

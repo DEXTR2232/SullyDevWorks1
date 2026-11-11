@@ -48,7 +48,7 @@ function initTeamCharts(){
   CHART_INSTANCES = [];
   chartDefaults();
   const grid = {color:'#232c37'};
-  const names = ['Sulaiman','Ahmed','Mohammed'];
+  const names = ['Omar','Rami','Yusuf'];
   const barColors = ['#4c8dff','#3fb67f','#e8c547'];
 
   CHART_INSTANCES.push(new Chart(document.getElementById('ch-handled'), {

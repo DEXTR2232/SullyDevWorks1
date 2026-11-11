@@ -5,12 +5,36 @@
    admin-users Edge Function, which holds the secret key.
 ========================================================= */
 let USERS_CACHE = [];
+const IS_DEMO = ()=> !!(CURRENT_USER && CURRENT_USER.isDemo);
+
+/* Demo account: every action goes to the fake-user sandbox (demo_* RPCs in
+   migration 002). Real accounts use RLS updates + the admin-users function. */
+async function rpc(name, args){
+  const {data, error} = await SB.rpc(name, args);
+  if(error) throw new Error(error.message);
+  return data;
+}
+const USERS_API = {
+  table: ()=> IS_DEMO() ? 'demo_users' : 'profiles',
+  create: (full_name, email, role)=> IS_DEMO()
+    ? rpc('demo_create_user', {p_full_name:full_name, p_email:email, p_role:role})
+    : adminCall({action:'create_user', email, full_name, role}).then(r=>r.temp_password),
+  setRole: async (id, role)=>{
+    if(IS_DEMO()) return rpc('demo_set_user_role', {p_id:id, p_role:role});
+    const {data, error} = await SB.from('profiles').update({role}).eq('id', id).select();
+    if(error || !data || !data.length) throw new Error(error ? error.message : 'not permitted');
+  },
+  resetPassword: id=> IS_DEMO() ? rpc('demo_reset_user_password', {p_id:id}) : adminCall({action:'reset_password', user_id:id}).then(r=>r.temp_password),
+  resetMfa: id=> IS_DEMO() ? rpc('demo_reset_user_mfa', {p_id:id}) : adminCall({action:'reset_mfa', user_id:id}),
+  setActive: (id, active)=> IS_DEMO() ? rpc('demo_set_user_active', {p_id:id, p_active:active}) : adminCall({action:'set_active', user_id:id, active})
+};
 
 function viewUsers(){
   if(!hasRole('admin')) return `<div class="card"><div class="empty-tab">${ICON.shield}<div>Administrators only.</div></div></div>`;
   return `
   <div class="section-head"><h2>Users &amp; Roles</h2><span class="hint">Accounts that can sign in to this console</span></div>
 
+  ${IS_DEMO() ? `<div class="notice notice-demo">${ICON.info}<div><b>Demo sandbox.</b> These are fake users; nothing here touches real accounts. The sandbox resets at the next demo sign-in.</div></div>` : ''}
   <div class="notice" id="users-msg" style="display:none;"></div>
 
   <div class="card" style="margin-bottom:16px;">
@@ -77,13 +101,10 @@ async function initUsersView(){
     const email = document.getElementById('nu-email').value.trim();
     btn.disabled = true; usersMsg('');
     try{
-      const r = await adminCall({
-        action:'create_user', email,
-        full_name: document.getElementById('nu-name').value.trim(),
-        role: document.getElementById('nu-role').value
-      });
+      const pw = await USERS_API.create(
+        document.getElementById('nu-name').value.trim(), email, document.getElementById('nu-role').value);
       e.target.reset();
-      showTempPassword(email, r.temp_password, 'User created');
+      showTempPassword(email, pw, 'User created');
       await loadUsers();
     }catch(err){ usersMsg('Could not create user: '+err.message, 'error'); }
     btn.disabled = false;
@@ -94,7 +115,7 @@ async function initUsersView(){
 async function loadUsers(){
   const body = document.getElementById('users-body');
   if(!body) return;
-  const {data, error} = await SB.from('profiles').select('*').order('created_at');
+  const {data, error} = await SB.from(USERS_API.table()).select('*').order('created_at');
   if(error){ body.innerHTML = `<tr><td colspan="7" style="color:var(--critical);padding:20px;">${esc(error.message)}</td></tr>`; return; }
   USERS_CACHE = data;
   body.innerHTML = data.map(userRow).join('');
@@ -110,7 +131,7 @@ function userRow(u){
     : `<select class="role-select" data-role-for="${u.id}">${Object.entries(ROLE_LABELS).map(([v,l])=>`<option value="${v}" ${u.role===v?'selected':''}>${l}</option>`).join('')}</select>`;
   return `
   <tr style="cursor:default;">
-    <td><span class="owner-cell"><span class="mini-av">${esc(profileToAnalyst(u).initials)}</span>${esc(u.full_name||'—')}</span></td>
+    <td><span class="owner-cell"><span class="mini-av">${esc(profileToAnalyst(u).initials)}</span>${esc(u.full_name||'—')}${u.is_demo?' <span class="sev Critical" title="Public demo login, sandboxed">Demo</span>':''}</span></td>
     <td class="mono" style="font-family:var(--font-mono);font-size:12px;">${esc(u.email)}</td>
     <td>${roleCell}</td>
     <td><span class="status-pill ${u.is_active?'Closed':'Escalated'}">${u.is_active?'Active':'Disabled'}</span></td>
@@ -127,8 +148,8 @@ function userRow(u){
 async function changeRole(id, role, sel){
   const u = USERS_CACHE.find(x=>x.id===id);
   if(!confirm(`Change ${u.email} to ${ROLE_LABELS[role]}?`)){ sel.value = u.role; return; }
-  const {data, error} = await SB.from('profiles').update({role}).eq('id', id).select();
-  if(error || !data || !data.length){ usersMsg('Role change failed: '+(error?error.message:'not permitted'), 'error'); sel.value = u.role; return; }
+  try{ await USERS_API.setRole(id, role); }
+  catch(err){ usersMsg('Role change failed: '+err.message, 'error'); sel.value = u.role; return; }
   usersMsg(`${u.email} is now ${ROLE_LABELS[role]}.`);
   loadUsers();
 }
@@ -145,13 +166,12 @@ async function userAction(act, id){
   usersMsg('');
   try{
     if(act==='reset_password'){
-      const r = await adminCall({action:'reset_password', user_id:id});
-      showTempPassword(u.email, r.temp_password, 'Password reset');
+      showTempPassword(u.email, await USERS_API.resetPassword(id), 'Password reset');
     }else if(act==='reset_mfa'){
-      await adminCall({action:'reset_mfa', user_id:id});
+      await USERS_API.resetMfa(id);
       usersMsg(`MFA removed for ${u.email}.`);
     }else{
-      await adminCall({action:'set_active', user_id:id, active: act==='enable'});
+      await USERS_API.setActive(id, act==='enable');
       usersMsg(`${u.email} ${act==='enable'?'enabled':'disabled'}.`);
     }
     loadUsers();
