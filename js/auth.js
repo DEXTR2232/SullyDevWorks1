@@ -101,9 +101,9 @@ async function afterMfa(){
 
 /* ---------- 1. email + password ---------- */
 function showLogin(message){
-  authScreen('Sign in', 'Use the account your administrator created for you.', `
+  authScreen('Sign in', 'Use the username or email your administrator gave you.', `
     <form id="login-form" class="auth-form" autocomplete="on">
-      <label>Email<input type="email" id="login-email" autocomplete="username" required></label>
+      <label>Username or email<input type="text" id="login-email" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
       <label>Password<input type="password" id="login-password" autocomplete="current-password" required></label>
       <button class="btn primary auth-btn" type="submit">Sign in</button>
     </form>
@@ -119,7 +119,7 @@ function showLogin(message){
     const btn = e.target.querySelector('button');
     busy(btn, true, 'Signing in…'); authMsg('');
     const {error} = await SB.auth.signInWithPassword({
-      email: document.getElementById('login-email').value.trim(),
+      email: loginToEmail(document.getElementById('login-email').value),
       password: document.getElementById('login-password').value
     });
     if(error){

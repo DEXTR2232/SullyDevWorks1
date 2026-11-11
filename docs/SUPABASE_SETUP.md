@@ -18,7 +18,7 @@ Creating users, resetting passwords/MFA, and disabling logins need the secret ke
 1. Dashboard → **Edge Functions** → **Deploy a new function** → **Via Editor**
 2. Name it exactly: `admin-users`
 3. Replace the sample code with [`supabase/functions/admin-users/index.ts`](../supabase/functions/admin-users/index.ts) → **Deploy**
-4. Leave **Verify JWT** on (default).
+4. Open the function's **Settings** tab and turn **Verify JWT with legacy secret OFF**, then **Save changes**. The function checks every caller itself: it validates the session with Supabase Auth and requires an MFA-verified, active, non-demo admin. Supabase recommends this setting for functions that do their own auth, and with it on, sessions on new-style projects can be rejected before the check runs.
 
 The function reads the secret key from Supabase's own environment. You don't set or paste any key.
 
@@ -28,7 +28,7 @@ The function reads the secret key from Supabase's own environment. You don't set
 
 1. **SQL Editor:** paste and run [`supabase/migrations/002_demo_mode.sql`](../supabase/migrations/002_demo_mode.sql).
 2. **Edge Functions → Deploy a new function → Via Editor:** name it exactly `demo-otp`, paste [`supabase/functions/demo-otp/index.ts`](../supabase/functions/demo-otp/index.ts), and **Deploy**.
-3. In the function's **Details/Settings**, turn **Verify JWT OFF**. This function is meant to be public.
+3. In the function's **Settings** tab, turn **Verify JWT with legacy secret OFF** and **Save changes**. This function is meant to be public, and the demo page can't load a code while this is on.
 4. **Re-deploy `admin-users`** with the updated file. It now refuses the demo account.
 5. Open `demo.html`. The first load creates the demo user (`demo@example.com`) and its MFA automatically. That takes a few seconds; after that, a 6-digit code appears.
 
@@ -46,6 +46,8 @@ You don't need to create the demo user by hand. If a visitor changes the demo pa
 **Authentication → Multi-Factor**: TOTP (authenticator app) **enabled**. It's on by default.
 
 ## 4. Create the first admin(s)
+
+Built-in accounts don't need a real mailbox. Use `username@unified-soar.local` (for example `faisal@unified-soar.local`) and sign in with just `faisal`. The app adds the domain (`LOGIN_DOMAIN` in `js/config.js`).
 
 1. **Authentication → Users → Add user → Create new user**: email plus a temporary password, tick **Auto Confirm User**.
 2. **SQL Editor**: open [`supabase/bootstrap_first_admin.sql`](../supabase/bootstrap_first_admin.sql), replace the email and name, and **Run**. Repeat for each founding admin.

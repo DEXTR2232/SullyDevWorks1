@@ -5,6 +5,15 @@
 const SUPABASE_URL = 'https://bjnxtotmzdzmhqdfoyuh.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_udL6aL7xAA39PvrYYby42Q_n5U7H8PW';
 
+/* Built-in accounts sign in with a username (e.g. "faisal"); the app turns
+   it into username@LOGIN_DOMAIN, an internal address that never receives
+   mail. Anyone can still sign in with a full email address. */
+const LOGIN_DOMAIN = 'unified-soar.local';
+function loginToEmail(v){
+  v = String(v||'').trim().toLowerCase();
+  return v.includes('@') ? v : v + '@' + LOGIN_DOMAIN;
+}
+
 /* App roles → display labels. Must match the CHECK constraint in
    supabase/migrations/001_users_roles.sql */
 const ROLE_LABELS = {analyst:'SOC Analyst', team_lead:'Team Leader', admin:'Administrator'};
