@@ -81,7 +81,7 @@ async function afterMfa(){
   let {data:p, error} = await SB.from('profiles').select('*').eq('id', user.id).single();
   if(error || !p){
     await SB.auth.signOut();
-    return showLogin('Your account has no profile. Ask an administrator.');
+    return showLogin('Your account has no profile' + (error ? ' ('+error.message+')' : '') + '. Ask an administrator.');
   }
   if(!p.is_active){
     await SB.auth.signOut();
@@ -91,12 +91,29 @@ async function afterMfa(){
   if(p.is_demo && JUST_SIGNED_IN){
     // Fresh sandbox for every demo sign-in.
     const {error:rErr} = await SB.rpc('demo_reset');
-    if(rErr) return showLogin('Demo reset failed: '+rErr.message);
+    if(rErr){
+      // Don't leave a half-started demo session behind.
+      JUST_SIGNED_IN = false;
+      await SB.auth.signOut();
+      return showLogin('Demo reset failed: '+rErr.message);
+    }
     const {data:p2} = await SB.from('profiles').select('*').eq('id', user.id).single();
     if(p2) p = p2;
   }
   JUST_SIGNED_IN = false;
   startApp(p, user.last_sign_in_at);
+}
+
+/* Wrong credentials get one generic message (don't reveal which part was
+   wrong). Anything else shows Supabase's own reason so problems are visible. */
+function signInErrorText(error){
+  const m = (error && error.message) || 'Unknown error';
+  if(/invalid login credentials/i.test(m)) return 'Invalid username/email or password.';
+  if(/banned/i.test(m)) return 'Your account is disabled. Ask an administrator.';
+  if(/email not confirmed/i.test(m)) return 'This account is not confirmed yet. Ask an administrator to confirm it in Supabase.';
+  if(/rate limit|too many/i.test(m)) return 'Too many attempts. Wait a minute and try again.';
+  if(/fetch|network/i.test(m)) return 'Cannot reach the server. Check your connection and try again.';
+  return 'Sign-in failed: ' + m;
 }
 
 /* ---------- 1. email + password ---------- */
@@ -124,7 +141,7 @@ function showLogin(message){
     });
     if(error){
       busy(btn, false);
-      return authMsg(/banned/i.test(error.message) ? 'Your account is disabled. Ask an administrator.' : 'Invalid email or password.');
+      return authMsg(signInErrorText(error));
     }
     JUST_SIGNED_IN = true;
     continueAuth();
@@ -174,7 +191,12 @@ function wireMfaForm(factorId){
     const btn = e.target.querySelector('button');
     busy(btn, true, 'Verifying…'); authMsg('');
     const {error} = await SB.auth.mfa.challengeAndVerify({factorId, code: input.value.trim()});
-    if(error){ busy(btn, false); input.value=''; input.focus(); return authMsg('That code did not work. Wait for a new code and try again.'); }
+    if(error){
+      busy(btn, false); input.value=''; input.focus();
+      return authMsg(/invalid|expired|code/i.test(error.message)
+        ? 'That code did not work. Wait for a new code and try again.'
+        : 'MFA check failed: ' + error.message);
+    }
     afterMfa();
   });
 }

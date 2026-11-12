@@ -300,7 +300,8 @@ begin
   end if;
   update public.profiles set role = 'analyst' where id = auth.uid() and is_demo;
   delete from public.audit_log where is_demo;
-  delete from public.demo_users;
+  -- "where true": Supabase's pg-safeupdate rejects DELETE/UPDATE without a WHERE clause.
+  delete from public.demo_users where true;
   insert into public.demo_users (full_name, email, role, must_change_password, created_at) values
     ('Mariam Saleh',   'mariam.saleh@demo.example',   'team_lead', false, now() - interval '41 days'),
     ('Tariq Mansour',  'tariq.mansour@demo.example',  'analyst',   false, now() - interval '33 days'),
