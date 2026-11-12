@@ -113,6 +113,8 @@ function renderView(){
   attachViewHandlers();
   if(STATE.view==='team') initTeamCharts();
   if(STATE.view==='users') initUsersView();
+  if(STATE.view==='reports') initReportsView();
+  if(STATE.view==='audit') initAuditView();
 }
 
 function renderShellNavOnly(){
