@@ -12,13 +12,14 @@ function viewSettings(){
       <ul>
         <li>${ICON.check}View alerts</li><li>${ICON.check}Take ownership</li><li>${ICON.check}Investigate</li>
         <li>${ICON.check}Add notes</li><li>${ICON.check}Escalate</li><li>${ICON.check}Close alerts</li>
+        <li>${ICON.check}Download reports (own performance only)</li>
       </ul>
     </div>
     <div class="card perm-card">
       <h3>Team Leader</h3>
       <ul>
         <li>${ICON.check}All analyst permissions</li><li>${ICON.check}Reassign alerts</li>
-        <li>${ICON.check}View team workload</li><li>${ICON.check}View analyst performance</li><li>${ICON.check}View reports</li>
+        <li>${ICON.check}View team workload</li><li>${ICON.check}View analyst performance</li><li>${ICON.check}Team reports & audit export</li>
       </ul>
     </div>
     <div class="card perm-card">

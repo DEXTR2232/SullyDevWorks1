@@ -32,7 +32,7 @@ The demo account is a **sandbox**. All data is fake, and a red **DEMO MODE** wat
 - **Alerts / My Alerts:** filterable by source, severity, status and analyst
 - **Alert detail:** sync status, ownership, escalate and close actions, a risk-score gauge, and 8 tabs (Overview, Investigation, Timeline, Evidence, Threat Intelligence, Related Alerts, Source Details, Audit History)
 - **Team Activity:** analyst workload, Chart.js metrics (MTTA/MTTI/MTTR, alerts by source, false-positive rate) and an activity feed
-- **Reports:** 24-hour summary, weekly, monthly executive, integration health and analyst performance, each with a mini view and CSV / Excel export (Excel has one sheet per section). Uses a 30-day sample history until alerts live in the database.
+- **Reports:** 24-hour summary, weekly, monthly executive, integration health and analyst performance, plus a custom date range. Each has a mini view and CSV / Excel export (Excel has one sheet per section), and covers escalations and alerts converted to incidents. Every role can download reports; analysts only see their own performance figures. Uses a 30-day sample history until alerts live in the database.
 - **Audit Logs:** alert actions plus real user & access changes from the database, with search, category filter and CSV / Excel export of the filtered rows
 - **Integrations, Playbooks, Threat Intel, Cases and Settings** (role matrix)
 

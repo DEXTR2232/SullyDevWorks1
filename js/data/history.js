@@ -49,10 +49,24 @@ const HISTORY_ALERTS = (function(){
       if(ageH < 6) status = pick([['Investigating',45],['Escalated',10],['Closed',45]]);
       else if(rnd() < 0.06) status = 'Escalated';
       const resolveMins = status === 'Closed' ? ackMins + Math.round(between(15, severity==='Critical'?240:480)) : null;
-      const disposition = status === 'Closed' ? pick([['True Positive',33],['False Positive',24],['Benign',43]]) : null;
+      let disposition = status === 'Closed' ? pick([['True Positive',33],['False Positive',24],['Benign',43]]) : null;
+      // Escalated at some point (even if since closed). Likelier for severe alerts.
+      const escRate = {Critical:.55, High:.25, Medium:.08, Low:.03, Informational:.01}[severity];
+      const escalated = status === 'Escalated' || rnd() < escRate;
+      const escalatedMins = escalated ? ackMins + Math.round(between(5, 90)) : null;
+      // Some escalations become incidents. An incident means a confirmed true positive.
+      let incident = null, incidentMins = null;
+      if(escalated && (severity === 'Critical' || severity === 'High') && rnd() < (severity === 'Critical' ? .5 : .3)){
+        incident = true; incidentMins = escalatedMins + Math.round(between(10, 120));
+        if(status === 'Closed') disposition = 'True Positive';
+      }
       out.push({id:'SOC-' + String(n++).padStart(5,'0'), name, source, severity, owner, status, createdAt:created,
-                ackMins, resolveMins, disposition, tactic, technique, sample:true});
+                ackMins, resolveMins, disposition, tactic, technique, escalated, escalatedMins, incident, incidentMins, sample:true});
     }
   }
+  // Incident IDs in time order (INC-0001 …). Live alerts use the case they belong to.
+  out.sort((a,b)=>a.createdAt-b.createdAt);
+  let inc = 1;
+  out.forEach(a => { if(a.incident) a.incident = 'INC-' + String(inc++).padStart(4,'0'); });
   return out.sort((a,b)=>b.createdAt-a.createdAt);
 })();

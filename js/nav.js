@@ -15,7 +15,7 @@ const NAV_GROUPS = [
   ]},
   {label:'Insights', items:[
     {id:'team', label:'Team Activity', icon:'team', roles:['team_lead','admin']},
-    {id:'reports', label:'Reports', icon:'reports', roles:['team_lead','admin']},
+    {id:'reports', label:'Reports', icon:'reports'},
     {id:'audit', label:'Audit Logs', icon:'audit', roles:['team_lead','admin']},
   ]},
   {label:null, items:[
